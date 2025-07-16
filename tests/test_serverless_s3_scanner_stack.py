@@ -1,7 +1,7 @@
 import aws_cdk as core
 import aws_cdk.assertions as assertions
 
-from serverless_s3_scanner.serverless_s3_scanner_stack import ServerlessS3ScannerStack
+from infrastructure.serverless_s3_scanner_stack import ServerlessS3ScannerStack
 
 # example tests. To run these tests, uncomment this file along with the example
 # resource in serverless_s3_scanner/serverless_s3_scanner_stack.py

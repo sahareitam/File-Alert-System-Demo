@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-import os
 
 import aws_cdk as cdk
 
-from serverless_s3_scanner.serverless_s3_scanner_stack import ServerlessS3ScannerStack
+from infrastructure.serverless_s3_scanner_stack import ServerlessS3ScannerStack
 
 
 app = cdk.App()

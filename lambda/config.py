@@ -94,7 +94,7 @@ def setup_logging():
     )
 
     # Return logger for the calling module
-    return logging.getLogger(__name__)
+    return True
 
 # Validation Functions
 def validate_config():

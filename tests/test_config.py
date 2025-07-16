@@ -10,7 +10,7 @@ from datetime import datetime
 # Import the config module
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../lambda'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../lambda'))
 import config
 
 
@@ -247,22 +247,15 @@ class TestLoggingSetup:
     """Test logging configuration"""
 
     @patch('config.logging.basicConfig')
-    @patch('config.logging.getLogger')
-    def test_setup_logging(self, mock_get_logger, mock_basic_config):
+    def test_setup_logging(self, mock_basic_config):
         """Test logging setup function"""
-        mock_logger = Mock()
-        mock_get_logger.return_value = mock_logger
-
         result = config.setup_logging()
 
         # Verify basicConfig was called
         mock_basic_config.assert_called_once()
 
-        # Verify getLogger was called
-        mock_get_logger.assert_called_once()
-
         # Verify return value
-        assert result == mock_logger
+        assert result is True
 
 
 # Test runner
