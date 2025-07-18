@@ -28,9 +28,7 @@ Author: DevOps Student Portfolio Project
 Version: 1.0.0
 """
 
-import json
 import time
-from datetime import datetime
 from typing import Dict, List, Any
 from botocore.exceptions import ClientError, NoCredentialsError
 
