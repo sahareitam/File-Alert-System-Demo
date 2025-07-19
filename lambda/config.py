@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 
 # AWS Configuration
-AWS_REGION = os.environ.get('AWS_REGION', 'us-east-1')
+AWS_REGION = os.environ.get('AWS_REGION', 'eu-west-1')
 AWS_ACCOUNT_ID = os.environ.get('AWS_ACCOUNT_ID', '')
 
 # S3 Configuration
