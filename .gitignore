@@ -9,3 +9,4 @@ env_check.sh
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+.idea/
