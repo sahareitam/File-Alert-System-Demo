@@ -1,0 +1,11 @@
+{
+  "name": "Test Configuration",
+  "version": "1.0.0",
+  "settings": {
+    "enabled": true,
+    "timeout": 30,
+    "retry_count": 3
+  },
+  "features": ["logging", "monitoring", "alerts"],
+  "environment": "testing"
+}

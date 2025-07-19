@@ -1,0 +1,3 @@
+Test Document - Sample Text File
+This is a simple text document used for testing file scanning functionality.
+Contains basic text content for demonstration purposes.

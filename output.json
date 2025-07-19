@@ -1,0 +1,1 @@
+{"errorMessage": "'bool' object has no attribute 'info'", "errorType": "AttributeError", "requestId": "5cfef67c-0e0d-42b2-bcfb-cf8ab0cb2b84", "stackTrace": ["  File \"/var/task/s3_scanner.py\", line 30, in lambda_handler\n    logger.info(\"=\" * 50)\n"]}

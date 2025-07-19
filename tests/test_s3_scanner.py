@@ -19,12 +19,13 @@ import s3_scanner
 class TestLambdaHandler:
     """Test the main lambda_handler function"""
 
+    @patch('s3_scanner.logger')
     @patch('s3_scanner.send_notification')
     @patch('s3_scanner.scan_s3_bucket')
     @patch('s3_scanner.config.validate_config')
     @patch('s3_scanner.config.setup_logging')
     def test_lambda_handler_success(self, mock_setup_logging, mock_validate_config,
-                                    mock_scan_s3_bucket, mock_send_notification):
+                                    mock_scan_s3_bucket, mock_send_notification, mock_logger):
         """
         Test the complete successful execution flow of lambda_handler.
 
@@ -35,8 +36,7 @@ class TestLambdaHandler:
         4. Scan results formatting
         """
         # Setup mocks
-        mock_logger = Mock()
-        mock_setup_logging.return_value = mock_logger
+        mock_setup_logging.return_value = None
         mock_validate_config.return_value = True
 
         # Mock S3 scan results
@@ -70,7 +70,7 @@ class TestLambdaHandler:
         mock_context.aws_request_id = 'test-request-123'
 
         # Test data
-        test_event = {}  # Empty event for manual trigger
+        test_event = {"test": "data"}  # Event with some data
 
         # Execute the function
         result = s3_scanner.lambda_handler(test_event, mock_context)
@@ -113,9 +113,10 @@ class TestLambdaHandler:
         # Verify logging calls
         assert mock_logger.info.call_count >= 3  # Multiple info logs expected
 
+    @patch('s3_scanner.logger')
     @patch('s3_scanner.config.validate_config')
     @patch('s3_scanner.config.setup_logging')
-    def test_lambda_handler_config_error(self, mock_setup_logging, mock_validate_config):
+    def test_lambda_handler_config_error(self, mock_setup_logging, mock_validate_config, mock_logger):
         """
         Test lambda_handler behavior when configuration validation fails.
 
@@ -127,8 +128,7 @@ class TestLambdaHandler:
         simulating missing configuration like AWS_REGION or NOTIFICATION_EMAIL.
         """
         # Setup mocks
-        mock_logger = Mock()
-        mock_setup_logging.return_value = mock_logger
+        mock_setup_logging.return_value = None
 
         # Make validate_config raise a ValueError (simulating missing config)
         mock_validate_config.side_effect = ValueError("Missing required configuration: NOTIFICATION_EMAIL")
@@ -138,7 +138,7 @@ class TestLambdaHandler:
         mock_context.aws_request_id = 'test-request-456'
 
         # Test data
-        test_event = {}
+        test_event = {"test": "data"}
 
         # Execute the function
         result = s3_scanner.lambda_handler(test_event, mock_context)
@@ -167,10 +167,12 @@ class TestLambdaHandler:
         assert mock_logger.info.call_count >= 2  # Should have some initial logs
         assert mock_logger.error.call_count >= 1  # Should log the error
 
+    @patch('s3_scanner.logger')
     @patch('s3_scanner.scan_s3_bucket')
     @patch('s3_scanner.config.validate_config')
     @patch('s3_scanner.config.setup_logging')
-    def test_lambda_handler_s3_bucket_not_found(self, mock_setup_logging, mock_validate_config, mock_scan_s3_bucket):
+    def test_lambda_handler_s3_bucket_not_found(self, mock_setup_logging, mock_validate_config,
+                                               mock_scan_s3_bucket, mock_logger):
         """
         Test lambda_handler behavior when S3 bucket doesn't exist.
 
@@ -182,8 +184,7 @@ class TestLambdaHandler:
         simulating the scenario where the configured S3 bucket doesn't exist in AWS.
         """
         # Setup mocks
-        mock_logger = Mock()
-        mock_setup_logging.return_value = mock_logger
+        mock_setup_logging.return_value = None
         mock_validate_config.return_value = True
 
         # Create a realistic S3 ClientError for "bucket not found"
@@ -205,7 +206,7 @@ class TestLambdaHandler:
         mock_context.aws_request_id = 'test-request-789'
 
         # Test data
-        test_event = {}
+        test_event = {"test": "data"}
 
         # Execute the function
         result = s3_scanner.lambda_handler(test_event, mock_context)
@@ -241,9 +242,10 @@ class TestLambdaHandler:
 class TestScanS3Bucket:
     """Test the scan_s3_bucket function"""
 
+    @patch('s3_scanner.logger')
     @patch('s3_scanner.config.get_s3_client')
     @patch('s3_scanner.config.setup_logging')
-    def test_scan_s3_bucket_with_pagination(self, mock_setup_logging, mock_get_s3_client):
+    def test_scan_s3_bucket_with_pagination(self, mock_setup_logging, mock_get_s3_client, mock_logger):
         """
         Test scan_s3_bucket function with pagination handling.
 
@@ -258,8 +260,7 @@ class TestScanS3Bucket:
         This ensures the function collects all objects across multiple API calls.
         """
         # Setup mocks
-        mock_logger = Mock()
-        mock_setup_logging.return_value = mock_logger
+        mock_setup_logging.return_value = None
 
         # Create mock S3 client
         mock_s3_client = Mock()
@@ -349,9 +350,10 @@ class TestScanS3Bucket:
 class TestSendNotification:
     """Test the send_notification function"""
 
+    @patch('s3_scanner.logger')
     @patch('s3_scanner.config.get_sns_client')
     @patch('s3_scanner.config.setup_logging')
-    def test_send_notification_success(self, mock_setup_logging, mock_get_sns_client):
+    def test_send_notification_success(self, mock_setup_logging, mock_get_sns_client, mock_logger):
         """
         Test send_notification function with successful SNS publishing.
 
@@ -366,8 +368,7 @@ class TestSendNotification:
         3. The function handles the SNS response properly
         """
         # Setup mocks
-        mock_logger = Mock()
-        mock_setup_logging.return_value = mock_logger
+        mock_setup_logging.return_value = None
 
         # Create mock SNS client
         mock_sns_client = Mock()
@@ -445,3 +446,14 @@ class TestSendNotification:
         # Verify logging calls
         assert mock_logger.info.call_count >= 2  # Should log preparation and success
         assert mock_logger.debug.call_count >= 1  # Should log debug info
+
+
+# Helper functions for testing (fixing "Unresolved reference" issues)
+def scan_s3_bucket():
+    """Mock version of scan_s3_bucket for testing reference"""
+    return s3_scanner.scan_s3_bucket()
+
+
+def send_notification(scan_results):
+    """Mock version of send_notification for testing reference"""
+    return s3_scanner.send_notification(scan_results)

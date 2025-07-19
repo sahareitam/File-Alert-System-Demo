@@ -12,6 +12,7 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../lambda'))
 import config
+import logging
 
 
 class TestConfigValidation:
@@ -255,7 +256,12 @@ class TestLoggingSetup:
         mock_basic_config.assert_called_once()
 
         # Verify return value
-        assert result is True
+        assert result is None
+        mock_basic_config.assert_called_once()
+        call_args, call_kwargs = mock_basic_config.call_args
+        assert call_kwargs['level'] == getattr(logging, config.LOG_LEVEL.upper(), logging.INFO)
+        assert 'format' in call_kwargs
+        assert 'datefmt' in call_kwargs
 
 
 # Test runner

@@ -93,8 +93,6 @@ def setup_logging():
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-    # Return logger for the calling module
-    return True
 
 # Validation Functions
 def validate_config():
@@ -162,4 +160,5 @@ FEATURES = {
     'include_object_metadata': True,
     'send_empty_bucket_notification': True,
     'validate_email_format': True
+    # TODO: Add feature flag for CloudWatch metrics
 }

@@ -1,31 +1,11 @@
 """
 Serverless S3 Scanner Lambda Function
 
-This module contains the main Lambda function that scans an S3 bucket for objects,
-collects metadata about the files, and sends an email notification with scan results
-via Amazon SNS. The function is designed to be triggered manually for demonstration
-purposes in a DevOps portfolio project.
+Scans S3 bucket objects and sends email notifications via SNS.
+Designed for manual triggering and portfolio demonstration.
 
-The Lambda function performs the following operations:
-1. Validates configuration and initializes AWS clients
-2. Scans the configured S3 bucket to list all objects
-3. Collects object metadata (name, size, last modified date)
-4. Formats the scan results into a human-readable report
-5. Publishes the results to an SNS topic for email notification
-6. Returns a JSON response with execution details
-
-Dependencies:
-    - boto3: AWS SDK for Python
-    - config: Local configuration module with AWS clients and settings
-
-Environment Variables:
-    - AWS_REGION: AWS region for resource operations
-    - S3_BUCKET_NAME: Target S3 bucket to scan
-    - SNS_TOPIC_ARN: SNS topic ARN for notifications
-    - NOTIFICATION_EMAIL: Email address for notifications
-
-Author: DevOps Student Portfolio Project
-Version: 1.0.0
+Dependencies: boto3, config module
+Environment Variables: AWS_REGION, S3_BUCKET_NAME, SNS_TOPIC_ARN, NOTIFICATION_EMAIL
 """
 
 import time
@@ -34,51 +14,22 @@ from botocore.exceptions import ClientError, NoCredentialsError
 
 # Import local configuration module
 import config
+import logging
+logger = logging.getLogger(__name__)
+
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
-    Main AWS Lambda handler function for the S3 Scanner.
+    Main Lambda handler for S3 scanning.
 
-    This is the entry point for the Lambda function. It orchestrates the entire
-    S3 scanning process, from initialization to notification delivery. The function
-    handles all errors gracefully and ensures proper logging throughout execution.
+    Scans S3 bucket, formats results, and sends SNS notification.
+    Returns JSON response with scan results or error details.
 
-    The function flow:
-    1. Setup logging and validate configuration
-    2. Initialize start time for performance tracking
-    3. Scan the S3 bucket for objects
-    4. Format and send notification with results
-    5. Return execution summary
-
-    Args:
-        event (Dict[str, Any]): AWS Lambda event object containing trigger information.
-                               For manual invocations, this is typically empty or contains
-                               test data. The function doesn't rely on specific event data.
-        context (Any): AWS Lambda context object containing runtime information such as
-                      function name, version, remaining time, and request ID.
-
-    Returns:
-        Dict[str, Any]: JSON response containing execution results with the following structure:
-            {
-                "statusCode": int,           # HTTP status code (200 for success, 500 for error)
-                "message": str,              # Human-readable status message
-                "scanResults": {             # Detailed scan results (only on success)
-                    "bucketName": str,       # Name of the scanned S3 bucket
-                    "objectCount": int,      # Number of objects found
-                    "scanDuration": float,   # Scan duration in seconds
-                    "timestamp": str         # ISO timestamp of scan completion
-                },
-                "error": str                 # Error details (only on failure)
-            }
-
-    Raises:
-        The function catches all exceptions internally and returns error details
-        in the response rather than raising them. This ensures Lambda doesn't
-        retry failed executions unnecessarily.
+    # TODO: Add CloudWatch metrics for monitoring (option)
     """
     # Setup logging for this execution
-    logger = config.setup_logging()
+    config.setup_logging()
     logger.info("=" * 50)
     logger.info(f"Starting {config.APP_NAME} v{config.APP_VERSION}")
     logger.info(f"Request ID: {context.aws_request_id if context else 'local-test'}")
@@ -183,47 +134,12 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 def scan_s3_bucket() -> Dict[str, Any]:
     """
-    Scan the configured S3 bucket and retrieve metadata for all objects.
+    Scan S3 bucket and retrieve object metadata.
 
-    This function connects to the S3 service and performs a comprehensive scan
-    of the configured bucket. It retrieves essential metadata for each object
-    including the object key (filename), size in bytes, and last modified timestamp.
-    The function handles pagination automatically to ensure all objects are retrieved
-    regardless of bucket size.
+    Handles pagination automatically for buckets with >1000 objects.
+    Returns dict with bucket_name, object_count, objects list, and timestamp.
 
-    The function uses the S3 list_objects_v2 API which is more efficient than
-    the legacy list_objects API and provides better performance for large buckets.
-
-    Returns:
-        Dict[str, Any]: Dictionary containing scan results with the following structure:
-            {
-                "bucket_name": str,          # Name of the scanned S3 bucket
-                "object_count": int,         # Total number of objects found
-                "objects": List[Dict],       # List of object metadata dictionaries
-                "scan_timestamp": str        # ISO timestamp when scan was performed
-            }
-
-            Each object in the "objects" list contains:
-            {
-                "Key": str,                  # Object key (filename/path)
-                "Size": int,                 # Object size in bytes
-                "LastModified": datetime     # Last modification timestamp
-            }
-
-    Raises:
-        ClientError: If there are issues accessing the S3 bucket, such as:
-                    - NoSuchBucket: The specified bucket doesn't exist
-                    - AccessDenied: Insufficient permissions to read the bucket
-                    - InvalidBucketName: The bucket name is malformed
-
-        Exception: For other unexpected errors during the S3 operation
-
-    Example:
-        >>> results = scan_s3_bucket()
-        >>> print(f"Found {results['object_count']} objects in {results['bucket_name']}")
-        Found 3 objects in my-bucket
     """
-    logger = config.setup_logging()
     logger.info(f"Scanning S3 bucket: {config.S3_BUCKET_NAME}")
 
     # Initialize S3 client
@@ -287,49 +203,11 @@ def scan_s3_bucket() -> Dict[str, Any]:
 
 def send_notification(scan_results: Dict[str, Any]) -> None:
     """
-    Send email notification with S3 scan results via Amazon SNS.
+    Send email notification with scan results via SNS.
 
-    This function formats the scan results into a human-readable email message
-    and publishes it to the configured SNS topic. The email includes a summary
-    of the scan (bucket name, object count, scan duration) and a detailed list
-    of all objects found with their metadata.
-
-    The function uses predefined email templates from the config module to ensure
-    consistent formatting and professional appearance. It handles both empty
-    buckets and buckets with multiple objects gracefully.
-
-    Args:
-        scan_results (Dict[str, Any]): Dictionary containing scan results from scan_s3_bucket().
-                                      Must include the following keys:
-                                      - bucket_name (str): Name of the scanned bucket
-                                      - object_count (int): Number of objects found
-                                      - objects (List[Dict]): List of object metadata
-                                      - scan_duration (float): Scan duration in seconds
-
-    Returns:
-        None: This function doesn't return a value but logs the SNS message ID on success.
-
-    Raises:
-        ClientError: If there are issues with the SNS service, such as:
-                    - InvalidTopicArn: The SNS topic ARN is invalid or doesn't exist
-                    - AuthorizationError: Insufficient permissions to publish to the topic
-                    - ThrottlingException: Too many requests to SNS
-
-        ValueError: If required keys are missing from scan_results parameter
-
-        Exception: For other unexpected errors during SNS publishing
-
-    Example:
-        >>> scan_results = {
-        ...     "bucket_name": "my-bucket",
-        ...     "object_count": 3,
-        ...     "objects": [...],
-        ...     "scan_duration": 1.25
-        ... }
-        >>> send_notification(scan_results)
-        # Sends email notification via SNS
+    Formats results using email templates and publishes to SNS topic.
+    Logs message ID on success.
     """
-    logger = config.setup_logging()
     logger.info("Preparing email notification...")
 
     # Validate required scan_results keys
@@ -409,27 +287,7 @@ def send_notification(scan_results: Dict[str, Any]) -> None:
 def format_scan_results(objects: List[Dict[str, Any]], duration: float) -> str:
     """
     Format scan results into a human-readable summary string.
-
-    This utility function creates a concise, formatted summary of the S3 scan
-    results that can be used in logs, console output, or other text-based
-    reporting. The summary includes object count, total size, and scan duration.
-
-    Args:
-        objects (List[Dict[str, Any]]): List of S3 object metadata dictionaries.
-                                       Each dictionary should contain 'Size' key.
-        duration (float): Scan duration in seconds.
-
-    Returns:
-        str: Formatted summary string containing:
-             - Total number of objects
-             - Total size in MB (rounded to 2 decimal places)
-             - Scan duration in seconds
-
-    Example:
-        >>> objects = [{'Size': 1024}, {'Size': 2048}]
-        >>> summary = format_scan_results(objects, 1.5)
-        >>> print(summary)
-        Scan Summary: 2 objects, 0.00 MB total, completed in 1.5 seconds
+    Returns formatted summary with object count, total size, and duration.
     """
     object_count = len(objects)
     total_size_bytes = sum(obj.get('Size', 0) for obj in objects)
