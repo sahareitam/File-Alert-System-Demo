@@ -82,17 +82,50 @@ Best regards,
 Serverless S3 Scanner
 """
 
-# Logging Configuration
+
 def setup_logging():
-    """Setup logging configuration"""
+    """
+    Setup logging configuration - works both locally and in AWS Lambda.
+
+    This function intelligently detects the environment and configures logging accordingly:
+    - In Lambda: Clears existing handlers and sets up Lambda-compatible logging
+    - Locally: Uses standard logging configuration for development
+    """
+    import sys
+
+    # Get the log level from environment variable
     log_level = getattr(logging, LOG_LEVEL.upper(), logging.INFO)
 
-    logging.basicConfig(
-        level=log_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
+    # Detect environment: Lambda or Local development
+    is_lambda = 'AWS_LAMBDA_RUNTIME_API' in os.environ
 
+    if is_lambda:
+        # Lambda environment detected - setup Lambda-compatible logging
+        logger.debug("Lambda environment detected - setting up Lambda-compatible logging")
+
+        # Clear existing handlers to avoid conflicts with AWS Lambda's default handlers
+        root_logger = logging.getLogger()
+        for handler in root_logger.handlers[:]:
+            root_logger.removeHandler(handler)
+
+        # Setup fresh logging configuration for Lambda
+        logging.basicConfig(
+            level=log_level,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            stream=sys.stdout,  # Direct output to stdout for CloudWatch
+            force=True  # Force override any existing configuration
+        )
+        logger.info("Lambda logging setup completed")
+
+    else:
+        # Local development environment - standard logging setup
+        logger.debug("Local environment detected - setting up local logging")
+        logging.basicConfig(
+            level=log_level,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'  # Include date formatting for local development
+        )
+        logger.info("Local logging setup completed")
 
 # Validation Functions
 def validate_config():

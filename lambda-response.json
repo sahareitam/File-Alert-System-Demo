@@ -1,1 +1,0 @@
-{"statusCode": 200, "message": "S3 scan completed successfully. Found 3 objects in serverless-s3-scanner-files-152253548464", "scanResults": {"bucketName": "serverless-s3-scanner-files-152253548464", "objectCount": 3, "scanDuration": 3.6, "timestamp": "2025-07-19T15:42:59.252173Z"}}
