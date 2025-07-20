@@ -76,14 +76,14 @@ class ServerlessS3ScannerStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # Create resources in CORRECTED dependency order
+        # Create resources in dependency order
         self.bucket = self._create_s3_bucket()
         self.bucket_deployment = self._upload_sample_files()
         self.sns_topic = self._create_sns_topic()
         self.lambda_role = self._create_lambda_role()
         self.lambda_function = self._create_lambda_function()
         self.sns_subscription = self._create_sns_subscription()
-
+        # Create outputs for easy access
         self._create_outputs()
 
     def _create_s3_bucket(self) -> s3.Bucket:

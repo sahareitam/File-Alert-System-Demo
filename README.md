@@ -145,14 +145,24 @@ cd serverless-s3-scanner
    - **Name**: `AWS_ACCESS_KEY_ID` **Value**: [Your AWS Access Key]
    - **Name**: `AWS_SECRET_ACCESS_KEY` **Value**: [Your AWS Secret Key]
 
-**Important**: Create an IAM user with these policies:
-- AWSCloudFormationFullAccess
-- IAMFullAccess  
-- AmazonS3FullAccess
-- AmazonSNSFullAccess
-- AWSLambda_FullAccess
+**Important**: Create an IAM user with AdministratorAccess policy (For learning/portfolio projects, full access simplifies setup)
 
-### Step 3: Deploy Infrastructure
+### Step 3: Configure Email Address
+
+Update the email address in `lambda/config.py` to receive notifications:
+```python
+# Change this to your email address
+NOTIFICATION_EMAIL = "your-email@example.com"
+```
+
+Commit the change:
+```bash
+git add lambda/config.py
+git commit -m "Update email address for notifications" 
+git push origin main
+```
+
+### Step 4: Deploy Infrastructure
 
 1. Go to **GitHub Repository** → **Actions** tab
 2. Click on **"Deploy Serverless S3 Scanner"** workflow
@@ -165,7 +175,7 @@ The workflow will:
 - Deploy all AWS infrastructure
 - Upload sample files to S3
 
-### Step 4: Confirm SNS Email Subscription
+### Step 5: Confirm SNS Email Subscription
 
 **Important**: After deployment, check your email for a confirmation message from AWS SNS.
 
@@ -297,13 +307,14 @@ serverless-s3-scanner/
 ```bash
 # Check AWS credentials are set correctly in GitHub Secrets
 # Verify IAM user has required permissions
-# Check CloudWatch logs for detailed errors
+# Review the failed workflow run in GitHub Actions tab for error details
 ```
 
 **2. Lambda Function Not Found**
 ```bash
 # Ensure deployment completed successfully
 # Check correct region (eu-west-1)
+cd infrastructure
 aws lambda list-functions --region eu-west-1
 ```
 
@@ -360,10 +371,6 @@ This project helped me understand:
 - Setting up CI/CD pipelines with GitHub Actions
 - AWS Lambda integration with other services
 - The importance of proper IAM permissions
-
-## License
-
-This project is for educational and portfolio demonstration purposes.
 
 ---
 

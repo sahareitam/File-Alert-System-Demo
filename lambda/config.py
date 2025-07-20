@@ -35,9 +35,6 @@ APP_NAME = 'Serverless S3 Scanner'
 APP_VERSION = '1.0.0'
 LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
 
-# Setup logger for this module
-logger = logging.getLogger(__name__)
-
 # AWS Clients (initialized once for performance)
 def get_s3_client():
     """Get S3 client with error handling"""
