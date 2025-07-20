@@ -8,6 +8,9 @@ import boto3
 import logging
 from datetime import datetime
 
+# Setup logger for this module
+logger = logging.getLogger(__name__)
+
 # AWS Configuration
 AWS_REGION = os.environ.get('AWS_REGION', 'eu-west-1')
 AWS_ACCOUNT_ID = os.environ.get('AWS_ACCOUNT_ID', '')
